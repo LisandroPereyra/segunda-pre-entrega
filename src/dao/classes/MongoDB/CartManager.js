@@ -1,115 +1,152 @@
 import CartModel from "../../models/cart.js"
 
-export default class CartManager { 
+class CartManager { 
     #carts
     constructor(){
         this.#carts = []
     }
 
-    async createCart () {
+    static async createCart (req, res) {
         try {
             await CartModel.create({
                 products: []
+
             })
+            console.log("nuevo carrito creado")
+            res.status(201).json("carrito creado")
         } catch (error) {
             console.log(error);
+
         }
     }
 
-    async getCart (id) {
+    static async getCart (req, res) {
+        const {id} = req.params
+
         try {
-            return await CartModel.findById(id).populate("products.productId")
+             const result = await CartModel.findById(id).populate("products.productId")
+             
+             res.status(201).json(result)
+
         } catch (error) {
             console.log(error);
-        }
+        } 
     }
 
-    async addProduct (cid, pid) {
+    static async addProduct (req, res) {
+        const {cid} = req.params
+        const {pid} = req.params
+        
         try {
             let cart = await CartModel.findById(cid)
             let product = cart.products.findIndex(prod => prod.productId == pid)
+            let update = []
             if (product > -1) {
                 cart.products[product].quantity++
-                let update = await CartModel.findByIdAndUpdate(cid, cart)
-                return update
+                update = await CartModel.findByIdAndUpdate(cid, cart)
+                
             } else {
                 cart.products.push({productId: pid})
-                let update = await CartModel.findByIdAndUpdate(cid, cart)
-                return update
+                update = await CartModel.findByIdAndUpdate(cid, cart)
+                
             }
+            res.status(201).json(update)
         } catch (error) {
             console.log(error);
         }
     }
 
-    async addProductQuantity (cid, pid, quantity) {
+    static async addProductQuantity (req, res) {
+        const {cid} = req.params
+        const {pid} = req.params
+        
         try {
             let cart = await CartModel.findById(cid)
             let product = cart.products.findIndex(prod => prod.productId == pid)
+            
             if (product === -1) {
                 cart.products.push({productId: pid})
-                let update = await CartModel.findByIdAndUpdate(cid, cart)
-                return update
-            } else {
-                cart.products[product].quantity = parseInt(quantity)
-                console.log(cart.products[product].quantity);
-                let update = await CartModel.findByIdAndUpdate(cid, cart)
-                console.log('founded');
+                const update = await CartModel.findByIdAndUpdate(cid, cart)
                 return update
             }
-        } catch (error) {
+             else {
+                cart.products[product].quantity = parseInt(quantity)
+                const update = await CartModel.findByIdAndUpdate(cid, cart)
+                console.log(cart.products[product].quantity);
+                console.log('founded');
+                //probar update con const
+                return update
+
+            }
+
+            res.status(201).json(update)
+
+        } 
+        catch (error) {
             console.log(error);
         }
     }
 
-    async addProducts (cid, array) {
-        try {
-            let cart = await CartModel.findById(cid)
-            array.forEach(async element => {
-                console.log(element);
-                const { prodId, quantity } = element
-                let id = cart.products.findIndex(prod => prod.productId == prodId)
-                if (id > -1) {
-                    console.log("Este producto ya existe");
-                    cart.products[id].quantity += parseInt(quantity)
-                }
-                else {
-                    cart.products.push(element)
-                    console.log(`Producto nuevo agregado`);
-                }
-            });
-            let update = await CartModel.findByIdAndUpdate(cid, cart)
-            return update
-        } catch (error) {
-            console.log(error);
-        }
-    }
+    // static async addProducts (cid, array) {
+        
+        
+        
+    //     try {
+    //         let cart = await CartModel.findById(cid)
+    //         array.forEach(async element => {
+    //             console.log(element);
+    //             const { prodId, quantity } = element
+    //             let id = cart.products.findIndex(prod => prod.productId == prodId)
+    //             if (id > -1) {
+    //                 console.log("Este producto ya existe");
+    //                 cart.products[id].quantity += parseInt(quantity)
+    //             }
+    //             else {
+    //                 cart.products.push(element)
+    //                 console.log(`Producto nuevo agregado`);
+    //             }
+    //         });
+    //         let update = await CartModel.findByIdAndUpdate(cid, cart)
+    //         return update
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // }
 
-    async deleteProduct(cid, pid) {
+    static async deleteProduct(req, res) {
+        const {cid} = req.params
+        const {pid} = req.params
+        
         try {
             let cart = await CartModel.findById(cid)
             let product = cart.products.findIndex(prod => prod.productId == pid)
+            let update
             if (product > -1) {
                 cart.products.splice((product), 1)
-                let update = await CartModel.findByIdAndUpdate(cid, cart)
-                return update
+                update = await CartModel.findByIdAndUpdate(cid, cart)
+                
             } else {
                 return "No puedes eliminar un producto inexistente"
             }
+            res.status(201).json(update)
         } catch (error) {
             console.log(error);
         }
     }
 
-    async deleteCart(cid) {
+    static async deleteCart(req,res) {
+        const {cid} = req.params
+        
         try {
-            let cart = await CartModel.findById(cid)
+            let cart = await CartModel.findByIdAndDelete(cid)
             cart.products = []
             console.log(cart.products);
             let update = await CartModel.findByIdAndUpdate(cid, cart)
-            return update
+            res.status(201).json(update)
         } catch (error) {
             console.log(error);
         }
     }
 }
+
+export default CartManager

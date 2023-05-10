@@ -1,64 +1,82 @@
+import { json } from "express";
 import ProductModel from "../../models/product.js";
 
-export default class ProductManager {
-  #products;
-  constructor() {
-    this.#products = [];
-  }
-
-  async getProducts (limit, page, query, sort) {
+class ProductManager {
+  
+  // constructor() {
+  //   this.products = [];
+  // }
+  
+  static async getProducts (limit, page, query, sort) {
+    
     let getLimit = limit !== undefined ? limit : 10
     let getPage = page !== undefined ? page: 1
     let getQuery = query !== undefined ? {category: query} : {}
     let getSort = sort === '-'? sort : '+'
 
-    this.#products = await ProductModel.paginate(getQuery, {limit:getLimit, page:getPage, sort: `${getSort}price`})
-    return this.#products
+
+    const products = await ProductModel.paginate(getQuery, {limit:getLimit, page:getPage, sort: `${getSort}price`})
+    
+    console.log("funciona",products)
+    res.status(201).json(products)
   }
 
-  async getProductById (id) {
+  //   static async getProducts (req, res) {
+
+  //   const products = await ProductModel.find()
+  //   console.log("funciona",products)
+  //   res.status(201).json(products)
+  // }
+
+  static async getProductById (req, res) {
+    const {id} = req.params 
     let product = await ProductModel.findById(id)
-    return product
+    res.status(201).json(product)
   }
 
-  async addProduct (title, description, price, thumbnail, code, stock, category) {
-    // const {title, description, price, thumbnail, code, stock, category} = product
-    try {
-        let product = await ProductModel.create({
-        title,
-        description,
-        price,
-        thumbnail: (thumbnail===undefined? "Sin imagen" : thumbnail),
-        code,
-        stock, 
-        category
-        })
-        console.log('Product added');
-        return (product)
+  static async addProduct (req, res) {
+    const {body}= req
+    const product = {...body}
+
+
+
+    try { 
+       const result = await ProductModel.create(product)
+        console.log('Product added', result);
+        res.status(201).json(result)
+
     } catch (error) {
-        return error
+        res.status(404)
     }
   }
 
-  async updateProduct (id, obj) {
+  static async updateProduct (req, res) {
+    
+    const {id} = req.params
+    const {body}= req
+    const product = {...body}
     try {
-         await ProductModel.findByIdAndUpdate(id, obj, (err, doc)=>{
-          if (err) console.log(err);
-          else {console.log('updated');}
-        })
-    } catch (error) {
-        console.log(error);
+         const result = await ProductModel.findByIdAndUpdate(id, product)
+          console.log('updated', result );
+          res.status(201).json(result)
+        }
+        
+     catch(error) {
+        res.status(404);
     }
   }
+//http://localhost:8080/api/products/updateProduct/
+  static async deleteProduct (req, res) {
 
-  async deleteProduct (id) {
+    const {id} = req.params
     try {
-        await ProductModel.findByIdAndDelete(id, (err, doc)=>{
-          if (err) console.log(err);
-          else {console.log('deleted');}
-        })
+        await ProductModel.findByIdAndDelete(id)
+        res.status(201)
     } catch (error) {
         console.log(error);
+        res.status(404);
     }
   }
 }
+
+export default ProductManager;

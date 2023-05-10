@@ -1,12 +1,12 @@
-import { connect } from "mongoose";
+import mongoose from "mongoose"; //import connect
 
 
-const url = 'mongosh "mongodb+srv://clusterlp.vqygrsy.mongodb.net/myFirstDatabase" --apiVersion 1 --username lisandropereyra'
+const url = "mongodb+srv://lisandro:lisandro2003@cluster0.kbowbgi.mongodb.net/test"
 
 const dbConnection = async () => {
     try {
-        console.log('db conectada');
-        return await connect(url)
+        await mongoose.connect(url)
+        console.log("MongoDB conectado")
     } catch (error) {
         console.log(error);
         process.exit()
